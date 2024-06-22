@@ -3,13 +3,14 @@ import { ReactNode } from 'react';
 import Navbar from './Navbar';
 import { useRouter } from 'next/router';
 import { AiFillHourglass } from "react-icons/ai";
+import Spinner from './Spinner';
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  if (status === 'loading') {
-    return <div className='loading'><span><AiFillHourglass/></span><p>Loading...</p></div>;
+  
+   if(status === 'loading'){ return <div className='loading'><p><Spinner/></p></div>;
   }
 
   if (!session) {

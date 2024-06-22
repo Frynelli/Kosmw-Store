@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import UploadComponent from "./UploadComponent";
-
+import Spinner from '../components/Spinner'
 interface Product {
   _id?: string;
   title?: string;
@@ -64,7 +64,7 @@ const ProductForm = ({ _id, title, description, price, images, dataId }: Product
     setIsUploading(status);
   };
 
-  if (loading) return <div className='loading'><p>Loading...</p></div>;
+  if (loading) return <div className='loading'><p><Spinner/></p></div>;
 
   return (
     <form onSubmit={handleSubmit}>

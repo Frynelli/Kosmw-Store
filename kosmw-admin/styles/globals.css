@@ -39,5 +39,5 @@ label{
   @apply bg-gray-600 
 }
 .loading{
-  @apply w-full h-full flex justify-center items-center m-auto; 
+  @apply w-full h-screen flex justify-center items-center m-auto; 
 }
