@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductForm from '@/components/ProductForm';
+import Spinner from '@/components/Spinner';
 
 interface Product {
   _id: string;
@@ -44,7 +45,7 @@ const EditProductPage = () => {
     fetchData();
   }, [id]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p><Spinner/></p>;
 
   return (
     <Layout>

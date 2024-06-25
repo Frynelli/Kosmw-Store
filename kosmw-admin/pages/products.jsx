@@ -60,9 +60,10 @@ const handleSelectAll = () => {
 const handleBulkDelete = async () => {
   setLoading(true);
   const productIdsArray = Array.from(selectedProducts);
+  console.log(productIdsArray,"PRODUCTIDSARRAY")
   if (!window.confirm('Are you sure you want to delete the selected products?')) return;
   try {
-    const { data } = await axios.post('/api/bulk-delete', { productIds: productIdsArray });
+    const { data } = await axios.post('/api/bulk-delete', { productId: productIdsArray });
     setProduct(product.filter(p => !selectedProducts.has(p._id)));
     setSelectedProducts(new Set());
     router.push('/products');
@@ -110,7 +111,7 @@ const handleBulkDelete = async () => {
              
             <div className="flex space-x-2">
             {(product.images || []).map((image, index) => (
-                        <img key={index} src={image} alt={product.title} className="w-40 h-40 object-cover rounded-md border-2" />
+                        <img key={index} src={image} alt={product.title} className="w-40 max-h-40 flex flex-wrap object-cover rounded-md border-2 overflow-scroll " />
                       ))}
                       </div>
             <p className='text-gray-400 mt-4 capitalize'>{product.description}</p>

@@ -36,7 +36,10 @@ label{
   @apply bg-customSungloDark
 }
 .btn-disabled{
-  @apply bg-gray-600 
+  @apply bg-gray-600; 
+}
+.h-fit-content{
+  height: fit-content;
 }
 .loading{
   @apply w-full h-screen flex justify-center items-center m-auto; 

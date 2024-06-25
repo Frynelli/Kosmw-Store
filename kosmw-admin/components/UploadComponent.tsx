@@ -1,8 +1,11 @@
 // components/UploadComponent.tsx
+//its called in ProductForm 
 
 import { MdOutlineFileUpload } from "react-icons/md";
 import React, { useState } from 'react';
 import axios from 'axios';
+import Spinner from "./Spinner";
+import { FaRegTrashCan } from "react-icons/fa6";
 
 interface UploadComponentProps {
   onUpload: (imageUrls: string[]) => void;
@@ -15,14 +18,14 @@ interface UploadedFile {
 }
 const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps) => {
   const [message, setMessage] = useState('');
-  
   const [isUploading, setIsUploading] = useState(false);
   const [images, setImages] = useState<string[]>([]); // To store image URLs or paths
 
-
+console.log(images,'Images UploadComponent')
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(event.target.files, "handleUpload fn");
+    // console.log(event.target.files, "handleUpload:UploadComponent");
     const files = event.target?.files;
+    //(files,'files in handleUpload')
     if (!files || files.length === 0) {
       setMessage('Please select a file first.');
       return;
@@ -33,9 +36,9 @@ const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps)
     const formData = new FormData();
   
     //--Here we map the files so we append the info to formData
-    Array.from(files).forEach(file => {
-      formData.append('file', file); 
-      // console.log(file, 'this is formData from in the loop1');
+    Array.from(files).forEach((file) => {
+      formData.append(`file`, file); 
+       console.log(file, 'this is formData from in the loop1');
     });
 
 
@@ -43,6 +46,7 @@ const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps)
     try {
       const res = await axios.post('/api/upload', formData, {
         headers: {
+          'Content-Type':'multipart/form-data',
           'Accept':'application/json',
         },
       });
@@ -52,9 +56,10 @@ const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps)
         
         //--Links Here
         const links = uploadedFiles.map((file: UploadedFile) => file.link);
-        console.log(links,'these are the extracted links');
+         console.log(links,'these are the extracted links');
         setImages(prevImages => [...prevImages, ...links]);
-        onUpload([...images,...links]); // Pass the uploaded image URLs
+        
+        onUpload([...links]); // Pass the uploaded image URLs
         setMessage('Files uploaded successfully');
       } else {
         setMessage('File uploaded, but no file information returned.');
@@ -73,6 +78,7 @@ const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps)
   const handleDelete = (index: number) => {
     const updatedImages = [...images];
     updatedImages.splice(index, 1); // Remove the image at the specified index
+    //console.log(images,'images handleDelete fn  from UploadComponent')
     setImages(updatedImages);
     onUpload(updatedImages); // Pass updated images to the parent component
   };
@@ -84,13 +90,14 @@ const UploadComponent = ({ onUpload, setUploadingStatus }: UploadComponentProps)
         <div>Upload</div>
         <input onChange={handleUpload} type="file" multiple name="file" id="file" className="hidden" />
       </label>
-      {isUploading && <p>Uploading...</p>}
+      {isUploading && <p><Spinner/></p>}
       {message && <p>{message}</p>}
-      <div>
+      <div className="flex">
         {images.map((imageUrl, index) => (
           <div key={index} className="flex items-center">
             <img src={imageUrl} alt={`Uploaded ${index + 1}`} className="w-16 h-16 object-cover rounded-md mr-2" />
-            <button onClick={() => handleDelete(index)} className="btn btn-sm btn-danger">Delete</button>
+            <button onClick={() => handleDelete(index)} className="btn btn-sm btn-danger"><FaRegTrashCan className='m-2' /></button>
+          
           </div>
         ))}
       </div>

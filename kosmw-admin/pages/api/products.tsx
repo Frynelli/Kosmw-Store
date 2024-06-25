@@ -1,3 +1,4 @@
+//NEW TRIAL WITH NEW IMAGES
 // api/products.tsx
 //all product axios methods here
 //POST DELETE PUT POSTALL
@@ -54,21 +55,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (method === 'GET') {
     // Get all products from db
-    const { id } = req.query;
+    const { id, sortBy } = req.query;
     // console.log(id, "From api/product/");
 
     try {
+      let products;
       if (id) {
-        // console.log(id, "this is id from in try");
         const product = await ProductsData.findOne({ _id: new ObjectId(id as string) });
-
         if (!product) {
           return res.status(404).json({ error: 'Product with ID not found' });
         }
+        products = [product];
+      } else {
+        let sortCriteria: { [key: string]: number } = { createdAt: -1 }; // Default sort by createdAt descending
+        if (sortBy === 'title') {
+          sortCriteria = { title: 1 }; // Sort by title ascending
+          console.log(sortCriteria,'sortCriteria what is it ')
+        }
+        products = await ProductsData.find({}).sort(sortCriteria as any).toArray();
 
-        return res.status(200).json([product]);
       }
-      const products = await ProductsData.find({}).toArray();
       res.status(200).json(products);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -83,15 +89,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid ID format' });
     }
     try {
+      // Fetch existing product
+      const existingProduct = await ProductsData.findOne({ _id: new ObjectId(_id) });
+      if (!existingProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      // Combine existing images with new ones
+      const updatedImages = [...(existingProduct.images || []), ...(images || [])];
       const updateResult = await ProductsData.updateOne(
         { _id: new ObjectId(_id) },
-        { $set: { title, description, price, images: images || [] } } // Update images array
+        { $set: { title, description, price, images: updatedImages || [] } } // Update images array
       );
 
       if (updateResult.modifiedCount === 0) {
         return res.status(500).json({ error: 'Failed to update product' });
       }
-
+      if (updateResult.modifiedCount === 0) {
+        return res.status(500).json({ error: 'Failed to update product' });
+      }
       const updatedProduct = await ProductsData.findOne({ _id: new ObjectId(_id) });
 
       if (!updatedProduct) {
