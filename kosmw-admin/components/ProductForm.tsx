@@ -3,7 +3,7 @@
 //its called in products/edit 
 //its called in products/new
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 import UploadComponent from './UploadComponent';
@@ -39,7 +39,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
     price: '',
     images: [],
   });
-  
+    // Local state for form inputs
+    const [localTitle, setLocalTitle] = useState<string>('');
+    const [localDescription, setLocalDescription] = useState<string>('');
+    const [localPrice, setLocalPrice] = useState<string>('');
   
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]); //images that we want to delete we get it from ProductGallery selection
   const [loading, setLoading] = useState<boolean>(false);
@@ -70,6 +73,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
       //console.log(fetchedProduct._id,'this is the id is it?IMPORTANT')
       setProduct(fetchedProduct);
       setFetchedImages(fetchedProduct.images || []);
+      setLocalTitle(fetchedProduct.title || '');
+      setLocalDescription(fetchedProduct.description || '');
+      setLocalPrice(fetchedProduct.price || '');
 
        // Set the initial fetched images and product state
        initialFetchedImages.current = fetchedProduct.images || [];
@@ -129,13 +135,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
 };
 
   //handleImageUpload logic Here
-  const handleImageUpload = (imageUrls: string | string[])=>{
+  const handleImageUpload = useCallback((imageUrls: string | string[])=>{
     //console.log(imageUrls,'imageUrls handleUpload function');
     const imageArray = typeof imageUrls === 'string' ? imageUrls.split(',') : imageUrls;
     console.log(imageArray,'ImageArray? handleImageUpload')
     setUploadedImages(imageArray);
     
-  }
+  },[])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +153,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
 
       const currentProduct = {
         ...product,
+        title: localTitle,
+        description: localDescription,
+        price: localPrice,
         images: [...fetchedImages, ...uploadedImages],
       };
 
@@ -181,9 +190,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
     }
   };
   
-  const setUploadingStatus = (status: boolean) => {
+  const setUploadingStatus = useCallback((status: boolean) => {
     setIsUploading(status);
-  };
+  },[]);
 
   if (loading) return <div className="loading"><p><Spinner /></p></div>;
 
@@ -193,8 +202,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
       <input
         id="title"
         type="text"
-        value={product.title}
-        onChange={(e) => setProduct({ ...product, title: e.target.value })}
+        value={localTitle}
+        onChange={(e) => setLocalTitle(e.target.value)}
+        onBlur={(e) => setProduct({ ...product, title: e.target.value })}
         required
       />
       <label>Images:</label>
@@ -213,16 +223,20 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
       <input
         id="description"
         type="text"
-        value={product.description}
-        onChange={(e) => setProduct({ ...product, description: e.target.value })}
+        value={localDescription}
+        onChange={(e) => setLocalDescription(e.target.value)}
+        onBlur={(e) => setProduct({ ...product, description: e.target.value })}
+        // onChange={(e) => setProduct({ ...product, description: e.target.value })}
         required
       />
       <label htmlFor="price">Price:</label>
       <input
         id="price"
         type="number"
-        value={product.price}
-        onChange={(e) => setProduct({ ...product, price: e.target.value })}
+        value={localPrice}
+        onChange={(e) => setLocalPrice(e.target.value)}
+        onBlur={(e) => setProduct({ ...product, price: e.target.value })}
+        //onChange={(e) => setProduct({ ...product, price: e.target.value })}
         required
       />
       <button className="btn-primary btn-peach" type="submit" disabled={isUploading}>

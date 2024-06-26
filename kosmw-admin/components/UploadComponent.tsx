@@ -105,4 +105,4 @@ console.log(images,'Images UploadComponent')
   );
 };
 
-export default UploadComponent;
+export default React.memo(UploadComponent);
