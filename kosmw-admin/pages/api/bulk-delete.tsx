@@ -17,15 +17,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!productId || !Array.isArray(productId) || productId.length === 0) {
         return res.status(400).json({ error: 'Invalid product IDs' });
     }
-
+    
     try {
         await mongooseConnect();
         const client = await clientPromise;
-        const db = client.db('Kosmw-products');
-        const ProductsData = db.collection('products');
+        const db = client.db(process.env.DB_DB);
+        const ProductsData = db.collection(`${process.env.DB_COLLECTION_1}`);
 
         const objectIds = productId.map((id) => new ObjectId(id));
         console.log(objectIds,': ObjectId')
+
         const deleteResult = await ProductsData.deleteMany({ _id: { $in: objectIds } });
         console.log(deleteResult,'delete result in bulk-delete')
         res.status(200).json({ message: 'Products deleted successfully', deletedCount: deleteResult.deletedCount });
@@ -34,3 +35,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
+

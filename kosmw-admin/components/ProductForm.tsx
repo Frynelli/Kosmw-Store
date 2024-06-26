@@ -176,9 +176,10 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import UploadComponent from './UploadComponent';
 import Spinner from '../components/Spinner';
-import { FaRegTrashCan } from 'react-icons/fa6';
+//import { FaRegTrashCan } from 'react-icons/fa6';
 import ProductGallery from '@/components/ProductGallery'; // Assuming the path is correct
-import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+//import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+//import { deleteImageFromS3, deleteImageFromDatabase } from '@/lib/s3'; 
 
 interface Product {
   _id?: string;
@@ -209,12 +210,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
     images: [],
   });
   
+  
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [fetchedImages, setFetchedImages]= useState<string[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  console.log(uploadedImages,'uploaded Images productForm');
-  //console.log(fetchedImages,'fetchedImages ProductForm')
+  //console.log(uploadedImages,'uploaded Images productForm');
+  //console.log(fetchedImages,'fetchedImages ProductForm');
+  //console.log(imagesToDelete,'imagesToDelete ProductForm');
   
   
   // Store the initial state to compare later
@@ -249,7 +253,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
     }
   };
 
-  
+  //Delete bulk fn
+// const handleBulkDelete = async (selectedImages: string[]) => {
+//   setLoading(true);
+//   const imageIdsArray = Array.from(fetchedImages);
+//   console.log(imageIdsArray,"ImageARRAY handleBulkDelete ProductForm")
+//   if (!window.confirm('Are you sure you want to delete the selected products?')) return;
+//   try {
+//     const { data } = await axios.post('/api/bulk-delete', { 
+//       imageId: selectedImages,
+//       productId:[product._id] 
+//     });
+//     console.log(data,'data handleBulkDelete ProductForm')
+//     await fetchProduct(id as string);
+//   } catch (error) {
+//     console.error('Error during bulk delete:', error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
   // const handleImageDelete = async (index: number) => {
   //   try {
@@ -283,55 +305,100 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
   //   }
   // };
 //handleImageDelete is to pass the image info to ProductForm
-  const handleImageDelete = async (index: number) => {
-    try {
-      // Copy the uploadedImages array and remove the selected image
-      const updatedImages = [...uploadedImages];
-      const deletedImage = updatedImages.splice(index, 1)[0]; // Get the URL of the deleted image
-      console.log(deletedImage,'deleted image')
-      // Update state with the new array
+  // const handleImageDelete = async (index: number) => {
+  //   try {
+  //     // Copy the uploadedImages array and remove the selected image
+  //     const updatedImages = [...uploadedImages];
+  //     const deletedImage = updatedImages.splice(index, 1)[0]; // Get the URL of the deleted image
+  //     console.log(deletedImage,'deleted image')
+  //     // Update state with the new array
       
-      setUploadedImages(updatedImages);
-      setProduct((prevProduct) => ({
-        ...prevProduct,
-        images: updatedImages,
-      }));
+  //     setUploadedImages(updatedImages);
+  //     setProduct((prevProduct) => ({
+  //       ...prevProduct,
+  //       images: updatedImages,
+  //     }));
 
-      //S3 logic here
-      const clientS3 = new S3Client({
-        credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY || '',
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-        },
-        region: 'us-east-1', 
-      });
+  //     //S3 logic here
+  //     const clientS3 = new S3Client({
+  //       credentials: {
+  //         accessKeyId: process.env.S3_ACCESS_KEY || '',
+  //         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+  //       },
+  //       region: 'us-east-1', 
+  //     });
 
-      //console.log(deletedImage, 'deletedImage: ProductForm: handleImageDelete');
+  //     //console.log(deletedImage, 'deletedImage: ProductForm: handleImageDelete');
       
-      // Extract the filename from the URL
-      const fileName = deletedImage.split('/').pop(); // Assuming the URL ends with the filename
-      if (!fileName) {
-        console.error('Invalid image URL:', deletedImage);
-        return;
-      }
+  //     // Extract the filename from the URL
+  //     const fileName = deletedImage.split('/').pop(); // Assuming the URL ends with the filename
+  //     if (!fileName) {
+  //       console.error('Invalid image URL:', deletedImage);
+  //       return;
+  //     }
   
-      // Construct the S3 delete command
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.BUCKET_NAME, // Use NEXT_PUBLIC to make sure it's available in the client environment
-        Key: deletedImage,
-      });
+  //     // Construct the S3 delete command
+  //     const deleteCommand = new DeleteObjectCommand({
+  //       Bucket: process.env.BUCKET_NAME, // Use NEXT_PUBLIC to make sure it's available in the client environment
+  //       Key: deletedImage,
+  //     });
   
-      // Send the delete request to S3
-      await clientS3.send(deleteCommand);
+  //     // Send the delete request to S3
+  //     await clientS3.send(deleteCommand);
       
-      //mongoDb delete logic
+  //     //mongoDb delete logic
 
-      console.log(`Deleted file from S3: ${fileName}`);
-    } catch (error) {
-      console.error('Error deleting file from S3:', error);
-      // Handle error appropriately, e.g., show an error message to the user
+  //     console.log(`Deleted file from S3: ${fileName}`);
+  //   } catch (error) {
+  //     console.error('Error deleting file from S3:', error);
+  //     // Handle error appropriately, e.g., show an error message to the user
+  //   }
+  // };
+  const handleSelectedImagesToDelete = (images:string | string[]) => {
+    if (!Array.isArray(images)) {
+      console.log(images,'24092384092isadjhfiaohf')
+      console.error('Expected an array of strings for images.');
+      return;
+  }
+
+  console.log(images,'Here are the images in the handledelete')
+    setImagesToDelete(images);
+    };
+
+  //deleting Of Images
+  const extractImageKey = (imageUrl: string): string => {
+    const baseUrl = "https://kosmwbucket.s3.amazonaws.com/";
+
+    if (imageUrl.startsWith(baseUrl)) {
+        return imageUrl.replace(baseUrl, '');
+    } else {
+        console.error(`Image URL does not match the base URL: ${imageUrl}`);
+        return imageUrl; // Fallback to the original URL if it doesn't match
     }
-  };
+};
+
+  const deletingImages = async () => {
+    console.log('You are IN DeletingImages')
+    if (imagesToDelete.length > 0) {
+      
+      const imageKeysToDelete: string[] = imagesToDelete.map(extractImageKey);
+        //console.log(id,"is it the correct ID?")
+        console.log(imageKeysToDelete, 'Cleaned Image Keys to Delete');
+        console.log(imagesToDelete,'ImagesToDelete');
+        try {
+            const response = await axios.post('/api/image-delete', {
+                imageUrls: imagesToDelete,
+                productId: id,
+                extractedImageKey:imageKeysToDelete
+            });
+
+            console.log(response.data.message, 'Image-Bulk delete response what it says?');
+        } catch (error) {
+            console.error('Error deleting images:', error);
+            alert("there is an error here!")
+        }
+    }
+};
 
   //handleImageUpload logic Here
   const handleImageUpload = (imageUrls: string | string[])=>{
@@ -345,8 +412,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    console.log("we are IN SUBMIT")
     try {
+       // Delete images first
+      await deletingImages();
+
       const currentProduct = {
         ...product,
         images: [...fetchedImages, ...uploadedImages],
@@ -361,6 +431,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
         router.push('/products'); // Redirect if no changes
         return;
       }
+      
       //Combine fetched with uploaded images
       const combinedImages = [...uploadedImages];
       const updatedProduct = { ...product, images: combinedImages };
@@ -381,6 +452,49 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
       setLoading(false);
     }
   };
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  
+  //   try {
+  //     // Perform deletion of marked images from S3 and database
+  //     if (imagesToDelete.length > 0) {
+  //       const response = await fetch('/api/bulk-delete', {
+  //           method: 'POST',
+  //           headers: {
+  //               'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({
+  //               productId: [product._id],  // Assuming `product.id` is the current product's ID
+  //               imageIds: imagesToDelete,
+  //           }),
+  //       });
+  //       const result = await response.json();
+  //       console.log(result.message, 'Bulk delete response');
+  //   }
+  
+  //     // Combine remaining fetched and uploaded images
+  //     const combinedImages = [...uploadedImages];
+  //     const updatedProduct = { ...product, images: combinedImages };
+  
+  //     const url = id ? `/api/products?id=${id}` : '/api/products';
+  //     const method = id ? 'PUT' : 'POST';
+  //     const res = await axios({
+  //       method: method,
+  //       url: url,
+  //       data: updatedProduct,
+  //     });
+  
+  //     if (res.status === 200) {
+  //       router.push('/products'); // Redirect to product list page
+  //     }
+  //   } catch (error) {
+  //     console.error('Error submitting product:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  
 
   const setUploadingStatus = (status: boolean) => {
     setIsUploading(status);
@@ -402,7 +516,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ _id, title, description, pric
       <ProductGallery
         images={fetchedImages}
         onSelect={() => {}}
-        onDelete={handleImageDelete}
+        onDelete={handleSelectedImagesToDelete}
       />
       <div className="mb-2">
         <UploadComponent

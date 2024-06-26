@@ -163,7 +163,7 @@ export default async function handler(req, res) {
     });
   } else if (req.method === 'DELETE') {
     const { key } = req.body; // Expecting `key` (the filename) to be provided in the request body
-    console.log(key,'this is the key from Delete s3')
+    console.log(key,'this is the key from Delete')
     if (!key) {
       return res.status(400).send('No key provided for deletion');
     }
